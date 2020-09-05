@@ -1,25 +1,54 @@
 //Reference HTML div where issues will be displayed
 var issueContainerEl = document.querySelector("#issues-container");
 
+//Reference HTML div where limit warning (30+ issues) will display
+var limitWarningEl = document.querySelector("#limit-warning");
+
+//Reference HTML span
+var repoName = document.querySelector("#repo-name");
+
+//Extract query value from query string in an API call function
+var getRepoName = function() {
+    // grab repo name from url query string
+    var queryString = document.location.search;
+    var repoName = queryString.split("=")[1];
+
+    // if statement for error handling in case query parameter is unavailable
+    if (repoName) {
+        // display repo name on the page
+        repoNameEl.textContent = repoName;
+        getRepoIssues(repoName);
+    }
+    else {
+        // if no repo was given, redirect to the homepage
+        document.location.replace("./index.html");
+    }
+    
+};
 
 //Function to fetch repo issues
 var getRepoIssues = function(repo) {
-    console.log(repo);
     var apiUrl = "https://api.github.com/repos/" + repo + "/issues?direction=asc";
+    // make a get request to url
     fetch(apiUrl).then(function(response) {
         //request was successful
         if (response.ok) {
             response.json().then(function(data) {
                 // pass response data to DOM function
                 displayIssues(data);
+
+                //check if repo has 30+ issues and isn't displaying all
+                if (response.headers.get("Link")) {
+                    displayWarning(repo);
+                }
             });
         }
         else {
-            alert("There was a problem with your request!");
+            // if not successful, redirect to homepage
+            document.location.replace("./index.html");
         }
     });
 };
-getRepoIssues("facebook/react");
 
 //Function to display issues
 var displayIssues = function(issues) {
@@ -62,5 +91,21 @@ var displayIssues = function(issues) {
         //Append <a> elements
         issueContainerEl.appendChild(issueEl);
     }
-
 };
+
+// Display Warning Function (notify user if 30+ issues exist)
+var displayWarning = function(repo) {
+    //add text to warning container
+    limitWarningEl.textContent = "To see more than 30 issues, visit ";
+
+    var linkEl = document.createElement("a");
+    linkEl.textContent = "See More Issues on GitHub.com";
+    linkEl.setAttribute("href", "https://github.com/" + repo + "/issues");
+    linkEl.setAttribute("target", "_blank");
+
+    // append to warning container
+    limitWarningEl.appendChild(linkEl);
+};
+
+//Call function to extract query value from query string
+getRepoName();
