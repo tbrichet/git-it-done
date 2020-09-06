@@ -11,6 +11,9 @@ var repoContainerEl = document.querySelector("#repos-container");
 //Reference HTML Span where Searched Username Will Display
 var repoSearchTerm = document.querySelector("#repo-search-term");
 
+//Reference HTML Buttons for Search by Topic Feature
+var languageButtonsEl = document.querySelector("#language-buttons");
+
 //Submit Form and Send Input to getUserRepos Function
 var formSubmitHandler = function(event) {
     event.preventDefault();
@@ -104,3 +107,32 @@ var displayRepos = function(repos, searchTerm) {
         repoContainerEl.appendChild(repoEl);  
     };
 };
+
+// Function to get repos based on search terms (javascript, html, css, etc)
+var getFeaturedRepos = function(language) {
+    var apiUrl = "https://api.github.com/search/repositories?q=" + language + "+is:featured&sort=help-wanted-issues";
+    fetch(apiUrl).then(function(response) {
+        if (response.ok) {
+            response.json().then(function(data) {
+            displayRepos(data.items, language);
+            })
+        } else {
+            alert("Error: " + response.statusText);
+        }
+    });
+};
+
+//Function for Button Clicks in Search by Topic Feature
+var buttonClickHandler = function(event) {
+    var language = event.target.getAttribute("data-language");
+    
+    if(language) {
+        getFeaturedRepos(language);
+        
+        //clear old content
+        repoContainerEl.textContent = "";
+    }
+};
+
+//Button Click Handler for Search by Topic Feature
+languageButtonsEl.addEventListener("click", buttonClickHandler);
